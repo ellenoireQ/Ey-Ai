@@ -1,11 +1,15 @@
+use std::env;
+
 use axum::{ Router, routing::{post}};
+use dotenvy::dotenv;
 use crate::model::{models::Gemini::GeminiClient, utils::wrapper::eyai_wrapper,};
 mod model;
 
 #[tokio::main]
 async fn main() {
+    dotenv().ok();
     let gemini = GeminiClient::new();
-    gemini.initiate("your-env".to_string());
+    gemini.initiate(env::var("GEMINI_API_KEY").unwrap());
 
     let app = Router::new()
         .route("/generate", post(eyai_wrapper))
