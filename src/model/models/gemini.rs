@@ -1,11 +1,17 @@
 use std::sync::{Arc, Mutex};
 
 use axum::Json;
+use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
 #[derive(Clone)]
 pub struct GeminiClient {
     key: Arc<Mutex<Option<String>>>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct PromptInput {
+    pub prompt: String,
 }
 
 impl GeminiClient {
@@ -31,14 +37,5 @@ impl GeminiClient {
         let res = req.get("https://jsonplaceholder.typicode.com/todos/1").send().await.expect("");
         let json: Value = res.json().await.expect("Gagal parse JSON");
         Json(json)
-    }
-
-    // A wrapper function for EY-Ai integration
-    // it will handle the key management and request generation
-    pub async fn eyai_wrapper(&self, prompt: String) -> Json<Value> {
-        // Placeholder
-        // will return the key for usage in requests header
-        let key = self.get_key();
-        self.generate(prompt).await
     }
 }
