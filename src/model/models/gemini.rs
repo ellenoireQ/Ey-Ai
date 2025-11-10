@@ -32,4 +32,13 @@ impl GeminiClient {
         let json: Value = res.json().await.expect("Gagal parse JSON");
         Json(json)
     }
+
+    // A wrapper function for EY-Ai integration
+    // it will handle the key management and request generation
+    pub async fn eyai_wrapper(&self, prompt: String) -> Json<Value> {
+        // Placeholder
+        // will return the key for usage in requests header
+        let key = self.get_key();
+        self.generate(prompt).await
+    }
 }
