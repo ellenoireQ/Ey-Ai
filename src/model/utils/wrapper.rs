@@ -1,7 +1,6 @@
 use axum::{Json, extract::State};
 use serde_json::Value;
-
-use crate::model::{message::message::Message, models::Gemini::{GeminiClient, PromptInput}};
+use crate::model::{message::message::Message, models::gemini::{GeminiClient, PromptInput}};
 
 /// A wrapper function for EY-Ai integration.
 ///

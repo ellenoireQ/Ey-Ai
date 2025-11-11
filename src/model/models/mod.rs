@@ -1,1 +1,1 @@
-pub mod Gemini;
+pub mod gemini;
