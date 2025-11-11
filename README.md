@@ -1,7 +1,7 @@
-# 🌌 Ey-AI
+# Ey-AI
 
 `Ey-AI` is a **lightweight**, **modular**, and **high-performance** chatbot REST API framework written in Rust.  
-It is designed for simplicity, flexibility, and speed — making it easy to integrate powerful AI model APIs like **Google Gemini**, **OpenAI**, and others.
+It is designed for simplicity, flexibility, and speed making it easy to integrate powerful AI model APIs like **Google Gemini**, **OpenAI**, and others.
 
 ---
 
@@ -15,32 +15,41 @@ It is designed for simplicity, flexibility, and speed — making it easy to inte
 
 ---
 
-## 🧰 Example Usage
-
-```rust
-use ey_ai::models::Gemini::GeminiClient;
-
-#[tokio::main]
-async fn main() {
-    let gemini = GeminiClient::new();
-    gemini.initiate("YOUR_API_KEY".to_string());
-
-    let response = gemini.generate("Hi, how are you?".to_string()).await;
-    println!("{:?}", response);
-}
-```
-
 ## General Usage
 
 ```rust
-fn main(){
-    // initiate Client before generate
-    let gemini = GeminiClient::new();
-    gemini.initiate("YOUR_API_KEY".unwrap());
+ fn main(){
+    // Environment variable
+    dotenv().ok();
 
-    let response = gemini.generate_without_async("Hai".to_string());
-    // will return json
-    println!("{:?}", response);
+    // Start client
+    let gemini = GeminiClient::new();
+    gemini.initiate(env::var("GEMINI_API_KEY").unwrap());
+
+    // Generate response
+    let result = gemini.generate_without_async("Hi, how are you?".to_string());
+    println!("{}", result.unwrap());
+}
+```
+
+## REST Api Usage
+
+```rust
+#[tokio::main]
+async fn main() {
+    // Environment variable
+    dotenv().ok();
+
+    // Start client
+    let gemini = GeminiClient::new();
+    gemini.initiate(env::var("GEMINI_API_KEY").unwrap());
+
+    let app = Router::new()
+        .route("/generate", post(eyai_wrapper))
+        .with_state(gemini.clone());
+
+    let listener = tokio::net::TcpListener::bind("localhost:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
 ```
 
