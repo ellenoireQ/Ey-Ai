@@ -79,8 +79,6 @@ impl GeminiClient {
     // generate_without_async:
     // This generate version without blocking features
     // same as generate this will be return struct Message {}
-    // NOW: returned real JSON from Google Gemini
-    // Planned: return struct Message {} 
     pub fn generate_without_async(&self, prompt: String) -> anyhow::Result<Value>{
         let req = reqwest::blocking::Client::new();
         let api_key = self.get_key();
@@ -98,7 +96,27 @@ impl GeminiClient {
             }]
         });
 
-        let res = req.post(&url).json(&body).header("Content-Type", "application/json").send()?;
-        Ok(res.json()?)
+        let res = req.post(&url).json(&body).header("Content-Type", "application/json").send()?.json::<Value>()?;
+        let reply = res["candidates"]
+                    .get(0)
+                    .and_then(|c| c["content"]["parts"].get(0))
+                    .and_then(|p| p["text"].as_str())
+                    .unwrap_or("Not responded")
+                    .to_string();
+
+        let message = Message{
+            id: "pass".into(),
+            models: "pass".into(),
+            question: prompt,
+            choice: Choice{
+                role: Role{
+                    role: "pass".into(),
+                    content: reply
+                }
+            },
+            timestamp: "pass".into(),
+            loading: true,
+        };
+        Ok(json!(message))
     }
 }
