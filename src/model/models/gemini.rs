@@ -1,5 +1,6 @@
 use std::sync::{Arc, Mutex};
 
+use anyhow::Ok;
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -73,5 +74,31 @@ impl GeminiClient {
             loading: true,
         };
         Json(message)
+    }
+
+    // generate_without_async:
+    // This generate version without blocking features
+    // same as generate this will be return struct Message {}
+    // NOW: returned real JSON from Google Gemini
+    // Planned: return struct Message {} 
+    pub fn generate_without_async(&self, prompt: String) -> anyhow::Result<Value>{
+        let req = reqwest::blocking::Client::new();
+        let api_key = self.get_key();
+
+        let url = format!(
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={}",
+            api_key
+        );
+
+        let body = json!({
+            "contents": [{
+                "parts": [{
+                    "text": prompt
+                }]
+            }]
+        });
+
+        let res = req.post(&url).json(&body).header("Content-Type", "application/json").send()?;
+        Ok(res.json()?)
     }
 }
