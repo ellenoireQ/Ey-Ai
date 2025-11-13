@@ -34,7 +34,18 @@ impl GeminiClient {
         key.as_ref().unwrap().clone()
     }
 
-    // STATE: WIP
+    /// Generate text
+    ///
+    /// # State:
+    /// - WIP: This function is currently experimental.
+    /// - May soon become the default handler for REST API requests.
+    ///
+    /// # Description:
+    /// Sends a prompt to the Gemini model and returns the generated text.
+    /// This version uses a simple JSON body and is intended for lightweight REST usage.
+    ///
+    /// # Returns
+    /// A `Result<String>` will return 'content', see /websocket/websocket.rs: handle_socket()...match client.generate_text
     pub async fn generate_text(&self, prompt: String) -> Result<String> {
         let api_key = self.get_key();
 
@@ -75,6 +86,11 @@ impl GeminiClient {
         Ok(reply)
     }
 
+    /// Generate v1.
+    ///
+    /// # State
+    /// Deprecated: This version will be removed in future releases.
+    /// Use [`generate_text`], see the function in this file.
     pub async fn generate(&self, prompt: String) -> Json<Message> {
         let req = reqwest::Client::new();
         let api_key = self.get_key();
@@ -117,9 +133,28 @@ impl GeminiClient {
         Json(message)
     }
 
-    // generate_without_async:
-    // This generate version without blocking features
-    // same as generate this will be return struct Message {}
+    /// Generate text using the Gemini API (synchronous version).
+    ///
+    /// # Overview
+    /// This method provides a blocking (synchronous) alternative to [`generate`].
+    /// It can be useful for contexts where asynchronous execution is not available,
+    /// such as command-line tools or background worker threads.
+    ///
+    /// # Returns
+    /// A [`Result<Value>`] containing the model's response message on success,
+    /// or an [`anyhow::Error`] if the request or parsing fails.
+    ///
+    /// # Example
+    /// ```ignore
+    /// let gemini = GeminiClient::new();
+    /// gemini.initiate("API_KEY".into());
+    /// let result = gemini.generate_without_async("Hello Gemini!".into())?;
+    /// println!("{}", result);
+    /// ```
+    ///
+    /// # Notes
+    /// - Despite the name, this method is blocking.
+    /// - For non-blocking behavior, use [`generate_text`] instead.
     pub fn generate_without_async(&self, prompt: String) -> anyhow::Result<Value>{
         let req = reqwest::blocking::Client::new();
         let api_key = self.get_key();
