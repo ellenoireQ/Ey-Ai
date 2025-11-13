@@ -6,7 +6,7 @@ use axum::{
     response::IntoResponse,
 };
 use serde_json::json;
-use crate::model::models::gemini::GeminiClient;
+use crate::models::gemini::GeminiClient;
 
 
 // websocket_handler:
