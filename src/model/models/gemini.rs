@@ -4,7 +4,7 @@ use anyhow::Ok;
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-
+use anyhow::{anyhow, Result};
 use crate::model::message::message::{Choice, Message, Role};
 
 #[derive(Clone)]
@@ -32,6 +32,47 @@ impl GeminiClient {
     pub fn get_key(&self) -> String {
         let key = self.key.lock().unwrap();
         key.as_ref().unwrap().clone()
+    }
+
+    // STATE: WIP
+    pub async fn generate_text(&self, prompt: String) -> Result<String> {
+        let api_key = self.get_key();
+
+        let url = format!(
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={}",
+            api_key
+        );
+
+        let body = json!({
+            "contents": [{
+                "parts": [{
+                    "text": prompt
+                }]
+            }]
+        });
+        
+        let req = reqwest::Client::new();
+        let res = req
+            .post(&url)
+            .json(&body)
+            .header("Content-Type", "application/json")
+            .send()
+            .await
+            .map_err(|e| anyhow!("Failed to send request: {}", e))?;
+
+        let json: Value = res
+            .json()
+            .await
+            .map_err(|e| anyhow!("Failed to parse response: {}", e))?;
+
+        let reply = json["candidates"]
+            .get(0)
+            .and_then(|c| c["content"]["parts"].get(0))
+            .and_then(|p| p["text"].as_str())
+            .ok_or_else(|| anyhow!("No response from Gemini"))?
+            .to_string();
+
+        Ok(reply)
     }
 
     pub async fn generate(&self, prompt: String) -> Json<Message> {
