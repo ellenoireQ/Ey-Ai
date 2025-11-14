@@ -1,13 +1,15 @@
+use crate::{
+    model::message::message::{Choice, Message, Role},
+    models::gemini::GeminiClient,
+};
 use axum::{
     extract::{
-        ws::{Message as WsMessage, WebSocket},
         State, WebSocketUpgrade,
+        ws::{Message as WsMessage, WebSocket},
     },
     response::IntoResponse,
 };
-use serde_json::json;
-use crate::models::gemini::GeminiClient;
-
+use serde_json::{json, to_string};
 
 // websocket_handler:
 // Main function websocket to handling realtime connection
@@ -30,8 +32,11 @@ pub async fn handle_socket(mut socket: WebSocket, client: GeminiClient) {
         "status": "connected",
         "message": "Connected to EY-AI WebSocket"
     });
-    
-    if let Err(e) = socket.send(WsMessage::Text(welcome.to_string().into())).await {
+
+    if let Err(e) = socket
+        .send(WsMessage::Text(welcome.to_string().into()))
+        .await
+    {
         eprintln!("Failed to send welcome message: {}", e);
         return;
     }
@@ -40,44 +45,63 @@ pub async fn handle_socket(mut socket: WebSocket, client: GeminiClient) {
         match msg {
             Ok(WsMessage::Text(text)) => {
                 println!("Received message: {}", text);
-                
-                let loading_msg = json!({
-                    "type": "status",
-                    "loading": true,
-                    "content": ""
-                });
-                
-                if let Err(e) = socket.send(WsMessage::Text(loading_msg.to_string().into())).await {
-                    eprintln!("Failed to send loading message: {}", e);
-                    break;
-                }
+
+                let loading_msg = Message {
+                    id: "loading".into(),
+                    models: "".into(),
+                    question: text.to_string(),
+                    choice: Choice {
+                        role: Role {
+                            role: "system".into(),
+                            content: "".into(),
+                        },
+                    },
+                    timestamp: "".into(),
+                    loading: true,
+                };
+
+                let _ = socket
+                    .send(WsMessage::Text(to_string(&loading_msg).unwrap().into()))
+                    .await;
 
                 match client.generate_text(text.to_string()).await {
                     Ok(reply) => {
-                        let response_msg = json!({
-                            "type": "response",
-                            "loading": false,
-                            "content": reply,
-                        });
-                        
-                        if let Err(e) = socket.send(WsMessage::Text(response_msg.to_string().into())).await {
-                            eprintln!("Failed to send response: {}", e);
-                            break;
-                        }
+                        let response_msg = Message {
+                            id: "response".into(),
+                            models: "".into(),
+                            question: text.to_string(),
+                            choice: Choice {
+                                role: Role {
+                                    role: "assistant".into(),
+                                    content: reply,
+                                },
+                            },
+                            timestamp: "".into(),
+                            loading: false,
+                        };
+
+                        let _ = socket
+                            .send(WsMessage::Text(to_string(&response_msg).unwrap().into()))
+                            .await;
                     }
                     Err(e) => {
-                        eprintln!("Generation error: {}", e);
-                        let error_msg = json!({
-                            "type": "error",
-                            "loading": false,
-                            "content": "",
-                            "error": e.to_string()
-                        });
-                        
-                        if let Err(e) = socket.send(WsMessage::Text(error_msg.to_string().into())).await {
-                            eprintln!("Failed to send error message: {}", e);
-                            break;
-                        }
+                        let error_msg = Message {
+                            id: "error".into(),
+                            models: "".into(),
+                            question: "".into(),
+                            choice: Choice {
+                                role: Role {
+                                    role: "system".into(),
+                                    content: e.to_string(),
+                                },
+                            },
+                            timestamp: "".into(),
+                            loading: false,
+                        };
+
+                        let _ = socket
+                            .send(WsMessage::Text(to_string(&error_msg).unwrap().into()))
+                            .await;
                     }
                 }
             }
@@ -91,9 +115,7 @@ pub async fn handle_socket(mut socket: WebSocket, client: GeminiClient) {
                     break;
                 }
             }
-            Ok(_) => {
-               
-            }
+            Ok(_) => {}
             Err(e) => {
                 eprintln!("WebSocket error: {}", e);
                 break;
