@@ -1,4 +1,4 @@
-use crate::utils::models::ModelLLM;
+use crate::model_llm::ModelLLM;
 
 // selector:
 // this function is for matching enum model & return into string

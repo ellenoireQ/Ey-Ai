@@ -5,7 +5,7 @@ use axum::Json;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use anyhow::{anyhow, Result};
-use crate::{model::message::message::{Choice, Message, Role}, utils::{models::ModelLLM, select_model::selector}};
+use crate::{model::message::message::{Choice, Message, Role}, model_llm::ModelLLM, utils::select_model::selector};
 
 #[derive(Clone)]
 pub struct GeminiClient {
