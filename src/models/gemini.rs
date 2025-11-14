@@ -1,15 +1,16 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use anyhow::Ok;
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use anyhow::{anyhow, Result};
-use crate::model::message::message::{Choice, Message, Role};
+use crate::{model::message::message::{Choice, Message, Role}, utils::{models::ModelLLM, select_model::selector}};
 
 #[derive(Clone)]
 pub struct GeminiClient {
     key: Arc<Mutex<Option<String>>>,
+    model: Arc<Mutex<Option<String>>>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -21,17 +22,46 @@ impl GeminiClient {
     pub fn new() -> Self {
         Self {
             key: Arc::new(Mutex::new(None)),
+            model: Arc::new(Mutex::new(None)),
         }
     }
 
-    pub fn initiate(&self, env: String) {
-        let mut key = self.key.lock().unwrap();
-        *key = Some(env);
+    /// Initiate
+    /// 
+    /// # Description
+    /// Initialize constructor after ::new()
+    /// this mean after calling ::new() is needed for after steps
+    /// 
+    /// Needed value (env, model_name)
+    pub fn initiate(&self, env: String, model_name: ModelLLM) 
+    {
+        let mut key_guard = self.key.lock().unwrap();
+        let mut model_guard = self.model.lock().unwrap();
+
+        *key_guard = Some(env);
+
+        let select_model = selector(model_name);
+        *model_guard = Some(select_model);
+        
     }
 
-    pub fn get_key(&self) -> String {
+    /// Get Property
+    /// 
+    /// # Description
+    /// Getting environment which setted in main.rs
+    /// 
+    /// # Example:
+    /// let gemini = GeminiClient::new();
+    /// gemini.initiate(env::var("GEMINI_API_KEY").unwrap(), "gemini-2-5-flash".to_string());
+    /// 
+    /// then generate_text, generate, generate_without_async will taken value from self.get_property()
+    /// 
+    /// # Returns
+    /// get_property -> (String, String) -> ("abcDEfGhIjKlMn123", "gemini-2.5-flash")
+    pub fn get_property(&self) -> (String, String) {
         let key = self.key.lock().unwrap();
-        key.as_ref().unwrap().clone()
+        let model = self.model.lock().unwrap();
+        (key.as_ref().unwrap().clone(), model.as_ref().unwrap().clone())
     }
 
     /// Generate text
@@ -47,7 +77,7 @@ impl GeminiClient {
     /// # Returns
     /// A `Result<String>` will return 'content', see /websocket/websocket.rs: handle_socket()...match client.generate_text
     pub async fn generate_text(&self, prompt: String) -> Result<String> {
-        let api_key = self.get_key();
+        let (api_key, model) = self.get_property();
 
         let url = format!(
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={}",
@@ -93,7 +123,7 @@ impl GeminiClient {
     /// Use [`generate_text`], see the function in this file.
     pub async fn generate(&self, prompt: String) -> Json<Message> {
         let req = reqwest::Client::new();
-        let api_key = self.get_key();
+        let (api_key, model) = self.get_property();
 
          let url = format!(
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={}",
@@ -157,7 +187,7 @@ impl GeminiClient {
     /// - For non-blocking behavior, use [`generate_text`] instead.
     pub fn generate_without_async(&self, prompt: String) -> anyhow::Result<Value>{
         let req = reqwest::blocking::Client::new();
-        let api_key = self.get_key();
+        let (api_key, model) = self.get_property();
 
         let url = format!(
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={}",
