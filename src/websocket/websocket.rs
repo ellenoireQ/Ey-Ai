@@ -1,6 +1,6 @@
 use crate::{
     model::message::message::{Choice, Message, Role},
-    models::gemini::GeminiClient,
+    models::model_client::ModelClient,
 };
 use axum::{
     extract::{
@@ -16,7 +16,7 @@ use serde_json::{json, to_string};
 // WIP model
 pub async fn websocket_handler(
     ws: WebSocketUpgrade,
-    State(client): State<GeminiClient>,
+    State(client): State<ModelClient>,
 ) -> impl IntoResponse {
     ws.on_failed_upgrade(|error| {
         eprintln!("WebSocket upgrade failed: {}", error);
@@ -24,7 +24,7 @@ pub async fn websocket_handler(
     .on_upgrade(move |socket| handle_socket(socket, client))
 }
 
-pub async fn handle_socket(mut socket: WebSocket, client: GeminiClient) {
+pub async fn handle_socket(mut socket: WebSocket, client: ModelClient) {
     println!("New WebSocket connection established");
 
     let welcome = json!({

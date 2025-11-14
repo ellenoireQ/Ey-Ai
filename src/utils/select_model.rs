@@ -1,11 +1,15 @@
-use crate::model_llm::ModelLLM;
+use std::sync::Arc;
+
+use crate::{
+    model_llm::ModelLLM,
+    models::{gemini::GeminiProvider, model_client::ModelClient},
+    traits::ModelProvider,
+};
 
 // selector:
 // this function is for matching enum model & return into string
-pub fn selector(model: ModelLLM) -> String{
-    match model{
-        ModelLLM::Gemini25Flash => "gemini-2.5-flash".to_string(),
-        ModelLLM::Gemini25Pro => "gemini-2.5-pro".to_string(),
-        ModelLLM::Gemini25FlashLite => "gemini-2.5-flash-lite".to_string(),
+pub fn selector(model: ModelLLM) -> ModelClient {
+    match model {
+        ModelLLM::Gemini => ModelClient::new(Arc::new(GeminiProvider::new())),
     }
 }
