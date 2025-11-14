@@ -136,7 +136,6 @@ impl ModelProvider for GeminiProvider {
         Json(message)
     }*/
 
-    /*
     /// Generate text using the Gemini API (synchronous version).
     ///
     /// # Overview
@@ -159,9 +158,13 @@ impl ModelProvider for GeminiProvider {
     /// # Notes
     /// - Despite the name, this method is blocking.
     /// - For non-blocking behavior, use [`generate_text`] instead.
-    fn generate_without_async(&self, prompt: String) -> anyhow::Result<Value> {
+    fn generate_without_async(
+        &self,
+        api_key: String,
+        model: String,
+        prompt: String,
+    ) -> anyhow::Result<Value> {
         let req = reqwest::blocking::Client::new();
-        let (api_key, model) = self.get_property();
 
         let url = format!(
             "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
@@ -203,6 +206,5 @@ impl ModelProvider for GeminiProvider {
             loading: true,
         };
         Ok(json!(message))
-
-    }*/
+    }
 }

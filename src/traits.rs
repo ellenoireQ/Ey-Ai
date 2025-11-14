@@ -17,5 +17,10 @@ pub trait ModelProvider: Send + Sync {
 
     async fn generate_text(&self, api_key: &str, model: &str, prompt: String) -> Result<String>;
     //async fn generate(&self, prompt: String) -> Json<Message>;
-    //fn generate_without_async(&self, prompt: String) -> Result<Value>;
+    fn generate_without_async(
+        &self,
+        api_key: String,
+        model: String,
+        prompt: String,
+    ) -> Result<Value>;
 }

@@ -1,5 +1,6 @@
 use crate::traits::ModelProvider;
 use anyhow::Result;
+use serde_json::Value;
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
@@ -27,5 +28,11 @@ impl ModelClient {
         let key = self.key.lock().unwrap().clone();
         let model = self.model.lock().unwrap().clone();
         self.provider.generate_text(&key, &model, prompt).await
+    }
+
+    pub fn generate_sync(&self, prompt: String) -> Result<Value> {
+        let key = self.key.lock().unwrap().clone().to_string();
+        let model = self.model.lock().unwrap().clone().to_string();
+        self.provider.generate_without_async(key, model, prompt)
     }
 }
