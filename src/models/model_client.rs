@@ -19,9 +19,10 @@ impl ModelClient {
         }
     }
 
-    pub fn init(&self, api_key: String, model_name: String) {
+    pub fn init(&self, api_key: String, model_name: String) -> Self {
         *self.key.lock().unwrap() = api_key;
         *self.model.lock().unwrap() = model_name;
+        self.clone()
     }
 
     pub async fn generate_text(&self, prompt: String) -> Result<String> {
