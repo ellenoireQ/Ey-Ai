@@ -13,14 +13,52 @@ use axum::Json;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
+/// Input structure for receiving prompts from API requests.
+///
+/// # Fields
+/// * `prompt` - String containing the text prompt to be sent to the Gemini model
+///
+/// # Example
+/// ```json
+/// {
+///   "prompt": "Explain Rust programming"
+/// }
+/// ```
 #[derive(Serialize, Deserialize)]
 pub struct PromptInput {
     pub prompt: String,
 }
 
+/// Provider implementation for Google Gemini API.
+///
+/// `GeminiProvider` implements the `ModelProvider` trait to provide concrete
+/// implementation for communicating with Google Gemini language models. This struct
+/// is designed to be used through the `ModelClient` wrapper which handles API key
+/// and model name management.
+///
+/// # Usage
+/// This provider should not be used directly. Instead, use it through `ModelClient`:
+///
+/// ```rust,no_run
+///
+/// let provider = Arc::new(GeminiProvider::new());
+/// let client = ModelClient::new(provider);
+/// client.init("YOUR_API_KEY".to_string(), "gemini-pro".to_string());
+/// ```
+///
+/// # See Also
+/// * [`ModelClient`] - The recommended wrapper for using this provider
+/// * [`ModelProvider`] - The trait this struct implements
 pub struct GeminiProvider;
 
 impl GeminiProvider {
+    /// Creates a new instance of `GeminiProvider`.
+    ///
+    /// # Returns
+    /// A new instance of `GeminiProvider`
+    ///
+    /// No need to using this vanilla function
+    /// consider to using selector(), see: select_model.rs
     pub fn new() -> Self {
         Self
     }
@@ -32,18 +70,61 @@ impl ModelProvider for GeminiProvider {
         Self
     }
 
-    /// Generate text
+    /// Generates text using the Gemini API (asynchronous implementation).
     ///
-    /// # State:
-    /// - WIP: This function is currently experimental.
-    /// - May soon become the default handler for REST API requests.
+    /// # Direct Usage Not Recommended
+    /// This is a low-level implementation method. Use [`ModelClient::generate_text`] instead,
+    /// which provides a cleaner interface and handles API key/model management automatically.
     ///
-    /// # Description:
-    /// Sends a prompt to the Gemini model and returns the generated text.
-    /// This version uses a simple JSON body and is intended for lightweight REST usage.
+    /// # Arguments
+    /// * `api_key` - The API key for authenticating with Google Gemini API
+    /// * `model` - The name of the Gemini model to use (e.g., "gemini-2.5-flash")
+    /// * `prompt` - The text prompt to send to the model
     ///
     /// # Returns
-    /// A `Result<String>` will return 'content', see /websocket/websocket.rs: handle_socket()...match client.generate_text
+    /// * `Ok(String)` - The generated text response from the model
+    ///
+    /// # Errors
+    /// This function will return an error if:
+    /// * The HTTP request fails to send
+    /// * The response cannot be parsed as JSON
+    /// * The response doesn't contain the expected structure
+    /// * The API key is invalid or expired
+    ///
+    /// # API Details
+    /// **Endpoint:**
+    /// ```text
+    /// POST https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}
+    /// ```
+    ///
+    /// **Request Body:**
+    /// ```json
+    /// {
+    ///   "contents": [{
+    ///     "parts": [{
+    ///       "text": "your prompt here"
+    ///     }]
+    ///   }]
+    /// }
+    /// ```
+    ///
+    /// **Response Parsing:**
+    /// Extracts text from: `response.candidates[0].content.parts[0].text`
+    ///
+    /// # Recommended Usage Pattern
+    /// ```rust,no_run
+    /// # async fn example() {
+    /// dotenv.ok();
+    /// // Recommended: Use ModelClient wrapper
+    /// let gemini = selector(ModelLLM::Gemini);
+    ///  gemini.init(
+    ///    env::var("GEMINI_API_KEY").unwrap(),
+    ///    "gemini-2.5-flash".into(),
+    ///  );
+    ///
+    //  let _ = println!("{:?}", gemini.generate_sync("Hello!".to_string()));
+    /// # }
+    /// ```
     async fn generate_text(&self, api_key: &str, model: &str, prompt: String) -> Result<String> {
         let url = format!(
             "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
@@ -83,11 +164,11 @@ impl ModelProvider for GeminiProvider {
     }
 
     /*
-    /// Generate v1.
+    /// Generate v1 (Deprecated).
     ///
-    /// # State
-    /// Deprecated: This version will be removed in future releases.
-    /// Use [`generate_text`], see the function in this file.
+    /// # Status
+    /// **Deprecated**: This version will be removed in future releases.
+    /// Use [`generate_text`] through [`ModelClient`] instead.
     async fn generate(&self, prompt: String) -> Json<Message> {
         let req = reqwest::Client::new();
         let (api_key, model) = self.get_property();
@@ -136,28 +217,59 @@ impl ModelProvider for GeminiProvider {
         Json(message)
     }*/
 
-    /// Generate text using the Gemini API (synchronous version).
+    /// Generates text using the Gemini API (synchronous/blocking implementation).
     ///
-    /// # Overview
-    /// This method provides a blocking (synchronous) alternative to [`generate`].
-    /// It can be useful for contexts where asynchronous execution is not available,
-    /// such as command-line tools or background worker threads.
+    /// # Direct Usage Not Recommended
+    /// This is a low-level implementation method. Use [`ModelClient::generate_sync`] instead,
+    /// which provides a cleaner interface and handles API key/model management automatically.
+    ///
+    /// # Arguments
+    /// * `api_key` - The API key for authenticating with Google Gemini API
+    /// * `model` - The name of the Gemini model to use (e.g., "gemini-2.5-flash")
+    /// * `prompt` - The text prompt to send to the model
     ///
     /// # Returns
-    /// A [`Result<Value>`] containing the model's response message on success,
-    /// or an [`anyhow::Error`] if the request or parsing fails.
+    /// * `Ok(Value)` - A JSON value containing the [`Message`] object with the model's response
+    /// * `Err(anyhow::Error)` - If the request or parsing fails
     ///
-    /// # Example
-    /// ```ignore
-    /// let gemini = GeminiClient::new();
-    /// gemini.initiate("API_KEY".into());
-    /// let result = gemini.generate_without_async("Hello Gemini!".into())?;
-    /// println!("{}", result);
+    /// # Response Structure
+    /// The returned JSON contains a `Message` object with the following structure:
+    /// ```rust,ignore
+    /// Message {
+    ///     id: "pass",
+    ///     models: "pass",
+    ///     question: prompt,
+    ///     choice: Choice {
+    ///         role: Role {
+    ///             role: "pass",
+    ///             content: reply_from_gemini
+    ///         }
+    ///     },
+    ///     timestamp: "pass",
+    ///     loading: true
+    /// }
     /// ```
     ///
-    /// # Notes
-    /// - Despite the name, this method is blocking.
-    /// - For non-blocking behavior, use [`generate_text`] instead.
+    /// # Warning: Blocking Operation
+    /// This method is **blocking** and will halt the current thread until a response
+    /// is received. It uses `reqwest::blocking::Client` internally.
+    ///
+    /// # Use Cases
+    /// Suitable for:
+    /// - Command-line interface (CLI) tools
+    /// - Background worker threads without async runtime
+    /// - Batch processing scripts
+    /// - Testing and debugging
+    ///
+    /// **Not suitable for:**
+    /// - Web servers (use async version instead)
+    /// - Applications requiring high concurrency
+    ///
+    ///
+    /// # Performance Considerations
+    /// This method blocks the current thread. For web servers or applications that need
+    /// to handle concurrent requests efficiently, use [`generate_text`] through
+    /// [`ModelClient::generate_text`] instead.
     fn generate_without_async(
         &self,
         api_key: String,
