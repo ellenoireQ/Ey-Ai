@@ -23,4 +23,6 @@ pub trait ModelProvider: Send + Sync {
         model: String,
         prompt: String,
     ) -> Result<Value>;
+
+    async fn generate_stream(&self, api_key: &str, model: &str, prompt: String) -> Result<()>;
 }
