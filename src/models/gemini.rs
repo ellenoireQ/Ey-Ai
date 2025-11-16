@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 
 use crate::{
     model::message::message::{Choice, Message, Role},
-    model_llm::{GeminiModel, ModelLLM},
+    model_llm::{ModelLLM, Models},
     traits::ModelProvider,
     utils::select_model::selector,
 };

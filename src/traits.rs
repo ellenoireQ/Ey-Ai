@@ -6,7 +6,7 @@ use serde_json::Value;
 
 use crate::{
     model::message::message::Message,
-    model_llm::{GeminiModel, ModelLLM},
+    model_llm::{ModelLLM, Models},
 };
 
 /// A trait that defines the contract for a Large Language Model (LLM) provider.

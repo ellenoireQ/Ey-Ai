@@ -1,4 +1,7 @@
-use crate::traits::ModelProvider;
+use crate::{
+    model_llm::{ModelLLM, Models},
+    traits::ModelProvider,
+};
 use anyhow::Result;
 use serde_json::Value;
 use std::sync::{Arc, Mutex};
@@ -19,9 +22,16 @@ impl ModelClient {
         }
     }
 
-    pub fn init(&self, api_key: String, model_name: String) -> Self {
+    pub fn init(&self, api_key: String, model_name: Models) -> Self {
         *self.key.lock().unwrap() = api_key;
-        *self.model.lock().unwrap() = model_name;
+
+        let match_model = match model_name {
+            Models::Gemini25Flash => "gemini-2.5-flash".to_string(),
+            Models::Gemini25Pro => "gemini-2.5-pro".to_string(),
+            Models::Gemini25FlashLite => "gemini-2.5-flash-lite".to_string(),
+        };
+
+        *self.model.lock().unwrap() = match_model;
         self.clone()
     }
 

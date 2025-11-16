@@ -5,7 +5,7 @@ pub enum ModelLLM {
     Gemini,
 }
 
-pub enum GeminiModel {
+pub enum Models {
     // Google Gemini
     // ref: https://ai.google.dev/gemini-api/docs/models
     Gemini25Flash,
