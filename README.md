@@ -1,9 +1,13 @@
+
 # Ey-AI
 
 `Ey-AI` is a **lightweight**, **modular**, and **high-performance** chatbot REST API framework written in Rust.  
 It is designed for simplicity, flexibility, and speed making it easy to integrate powerful AI model APIs like **Google Gemini**, **OpenAI**, and others.
 
 ---
+
+## 👀 Deprecated DOCS
+Updated the docs soon after crate released
 
 ## 🚀 Features
 
@@ -52,7 +56,3 @@ async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 ```
-
-## ⚠️ This documentation is not yet complete
-
-> Unstable
