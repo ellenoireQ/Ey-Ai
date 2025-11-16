@@ -1,7 +1,4 @@
-use crate::{
-    model_llm::{ModelLLM, Models},
-    traits::ModelProvider,
-};
+use crate::{model_llm::Models, traits::ModelProvider};
 use anyhow::Result;
 use serde_json::Value;
 use std::sync::{Arc, Mutex};

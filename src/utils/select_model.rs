@@ -3,7 +3,6 @@ use std::sync::Arc;
 use crate::{
     model_llm::ModelLLM,
     models::{gemini::GeminiProvider, model_client::ModelClient},
-    traits::ModelProvider,
 };
 
 // selector:

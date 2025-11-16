@@ -1,15 +1,10 @@
-use std::sync::{Arc, Mutex, MutexGuard};
-
 use crate::{
     model::message::message::{Choice, Message, Role},
-    model_llm::{ModelLLM, Models},
     traits::ModelProvider,
-    utils::select_model::selector,
 };
 use anyhow::Ok;
 use anyhow::{Result, anyhow};
 use async_trait::async_trait;
-use axum::Json;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
