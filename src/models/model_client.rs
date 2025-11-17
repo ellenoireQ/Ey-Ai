@@ -1,13 +1,14 @@
 use crate::{model_llm::Models, traits::ModelProvider};
 use anyhow::Result;
+use axum::extract::State;
 use serde_json::Value;
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
 pub struct ModelClient {
-    key: Arc<Mutex<String>>,
-    model: Arc<Mutex<String>>,
-    provider: Arc<dyn ModelProvider>,
+    pub key: Arc<Mutex<String>>,
+    pub model: Arc<Mutex<String>>,
+    pub provider: Arc<dyn ModelProvider>,
 }
 
 impl ModelClient {
