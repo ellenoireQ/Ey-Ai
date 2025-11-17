@@ -14,17 +14,17 @@ use serde_json::{json, to_string};
 // websocket_handler:
 // Main function websocket to handling realtime connection
 // WIP model
-pub async fn websocket_handler(
+pub async fn WebSocketHandler(
     ws: WebSocketUpgrade,
     State(client): State<ModelClient>,
 ) -> impl IntoResponse {
     ws.on_failed_upgrade(|error| {
         eprintln!("WebSocket upgrade failed: {}", error);
     })
-    .on_upgrade(move |socket| handle_socket(socket, client))
+    .on_upgrade(move |socket| WebSocketController(socket, client))
 }
 
-pub async fn handle_socket(mut socket: WebSocket, client: ModelClient) {
+pub async fn WebSocketController(mut socket: WebSocket, client: ModelClient) {
     println!("New WebSocket connection established");
 
     let welcome = json!({
@@ -64,7 +64,7 @@ pub async fn handle_socket(mut socket: WebSocket, client: ModelClient) {
                     .send(WsMessage::Text(to_string(&loading_msg).unwrap().into()))
                     .await;
 
-                match client.generate_text(text.to_string()).await {
+                match client.GenerateContent(text.to_string()).await {
                     Ok(reply) => {
                         let response_msg = Message {
                             id: "response".into(),
