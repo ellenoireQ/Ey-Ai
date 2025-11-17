@@ -1,6 +1,15 @@
+use std::{convert::Infallible, pin::Pin};
+
 use anyhow::Result;
 use async_trait::async_trait;
+use axum::{
+    Json,
+    response::{Sse, sse::Event},
+};
+use futures::Stream;
 use serde_json::Value;
+
+use crate::model::message::message::Message;
 
 /// A trait that defines the contract for a Large Language Model (LLM) provider.
 ///
@@ -55,11 +64,16 @@ pub trait ModelProvider: Send + Sync {
         model: String,
         prompt: String,
     ) -> Result<Value>;
+
     /// Asynchronously generates a streaming response from the LLM Providers.
     ///
     /// This function is intended for real-time applications where the response
     /// should be processed in chunks as it's being generated (e.g., for a chatbot UI).
     ///
-    /// * Placeholder
-    async fn generate_stream(&self, api_key: &str, model: &str, prompt: String) -> Result<()>;
+    async fn generate_stream(
+        &self,
+        api_key: String,
+        model: String,
+        prompt: String,
+    ) -> Result<Pin<Box<dyn Stream<Item = Result<String, anyhow::Error>> + Send>>>;
 }
