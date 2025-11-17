@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 pub mod model;
 pub mod model_llm;
 pub mod models;
