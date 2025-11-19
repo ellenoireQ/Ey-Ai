@@ -10,12 +10,14 @@ use axum::{
     Json,
     response::{Sse, sse::Event},
 };
+use chrono::Utc;
 use futures::Stream;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
 use futures::StreamExt;
 use std::result::Result::Ok;
+use uuid::Uuid;
 
 /// Input structure for receiving prompts from API requests.
 ///
@@ -308,17 +310,20 @@ impl ModelProvider for GeminiProvider {
             .unwrap_or("Not responded")
             .to_string();
 
+        let model = res["modelVersion"].to_string();
+        let model = model.replace('"', "");
+
         let message = Message {
-            id: "pass".into(),
-            models: "pass".into(),
+            id: Uuid::new_v4().into(),
+            models: model,
             question: prompt,
             choice: Choice {
                 role: Role {
-                    role: "pass".into(),
+                    role: "assistant".into(),
                     content: reply,
                 },
             },
-            timestamp: "pass".into(),
+            timestamp: Utc::now().to_string(),
             loading: true,
         };
         Ok(json!(message))
