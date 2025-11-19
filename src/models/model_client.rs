@@ -27,6 +27,7 @@ impl ModelClient {
             Models::Gemini25Flash => "gemini-2.5-flash".to_string(),
             Models::Gemini25Pro => "gemini-2.5-pro".to_string(),
             Models::Gemini25FlashLite => "gemini-2.5-flash-lite".to_string(),
+            Models::Gemini3ProPreview => "gemini-3-pro-preview".to_string(),
         };
 
         *self.model.lock().unwrap() = match_model;

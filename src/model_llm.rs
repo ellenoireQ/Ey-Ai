@@ -11,4 +11,5 @@ pub enum Models {
     Gemini25Flash,
     Gemini25Pro,
     Gemini25FlashLite,
+    Gemini3ProPreview,
 }
