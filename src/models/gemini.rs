@@ -1,4 +1,4 @@
-use std::{convert::Infallible, pin::Pin};
+use std::pin::Pin;
 
 use crate::{
     model::message::message::{Choice, Message, Role},
@@ -6,10 +6,6 @@ use crate::{
 };
 use anyhow::{Result, anyhow};
 use async_trait::async_trait;
-use axum::{
-    Json,
-    response::{Sse, sse::Event},
-};
 use chrono::Utc;
 use futures::Stream;
 use serde::{Deserialize, Serialize};

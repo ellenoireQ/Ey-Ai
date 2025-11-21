@@ -1,15 +1,9 @@
-use std::{convert::Infallible, pin::Pin};
+use std::pin::Pin;
 
 use anyhow::Result;
 use async_trait::async_trait;
-use axum::{
-    Json,
-    response::{Sse, sse::Event},
-};
 use futures::Stream;
 use serde_json::Value;
-
-use crate::model::message::message::Message;
 
 /// A trait that defines the contract for a Large Language Model (LLM) provider.
 ///

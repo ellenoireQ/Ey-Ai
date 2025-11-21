@@ -1,6 +1,5 @@
 use crate::{model_llm::Models, traits::ModelProvider};
 use anyhow::Result;
-use axum::extract::State;
 use serde_json::Value;
 use std::sync::{Arc, Mutex};
 
